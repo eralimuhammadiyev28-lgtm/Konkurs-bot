@@ -10,6 +10,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main():
+    print(f"🔍 DIAGNOSTIKA: BOT_TOKEN uzunligi={len(BOT_TOKEN)}, repr={repr(BOT_TOKEN)}")
+    if not BOT_TOKEN:
+        print("❌ BOT_TOKEN sozlanmagan! Railway -> Variables bo'limiga BOT_TOKEN qo'shing.")
+        return
     await init_db()
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
