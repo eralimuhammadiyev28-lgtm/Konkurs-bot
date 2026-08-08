@@ -1,8 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
+BACK_BTN = "⬅️ Ortga"
+
 
 def join_channels_kb(channels):
-    """channels: db.get_mandatory_channels() natijasi (Row obyektlar ro'yxati)."""
     rows = []
     for ch in channels:
         link = ch["invite_link"] or (f"https://t.me/{ch['username']}" if ch["username"] else None)
@@ -20,34 +21,39 @@ def main_menu_kb():
     ], resize_keyboard=True)
 
 
-def admin_panel_kb():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="▶️ Konkursni boshlash", callback_data="admin_start_contest")],
-        [InlineKeyboardButton(text="🏆 G'oliblarni ko'rish", callback_data="admin_winners")],
-        [InlineKeyboardButton(text="📊 Umumiy statistika", callback_data="admin_stats")],
-        [InlineKeyboardButton(text="📣 Hammaga xabar", callback_data="admin_broadcast")],
-        [InlineKeyboardButton(text="🔒 Majburiy kanallar", callback_data="admin_channels")],
-        [InlineKeyboardButton(text="⚙️ Admin qo'shish", callback_data="admin_add_admin")],
-    ])
+ADMIN_BTN_START_CONTEST = "▶️ Konkursni boshlash"
+ADMIN_BTN_WINNERS = "🏆 G'oliblarni ko'rish"
+ADMIN_BTN_STATS = "📊 Umumiy statistika"
+ADMIN_BTN_BROADCAST = "📣 Hammaga xabar"
+ADMIN_BTN_CHANNELS = "🔒 Majburiy kanallar"
+ADMIN_BTN_ADD_ADMIN = "⚙️ Admin qo'shish"
+ADMIN_BTN_EXIT = "🚪 Admin paneldan chiqish"
+
+
+def admin_main_menu_kb():
+    return ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text=ADMIN_BTN_START_CONTEST)],
+        [KeyboardButton(text=ADMIN_BTN_WINNERS), KeyboardButton(text=ADMIN_BTN_STATS)],
+        [KeyboardButton(text=ADMIN_BTN_BROADCAST), KeyboardButton(text=ADMIN_BTN_CHANNELS)],
+        [KeyboardButton(text=ADMIN_BTN_ADD_ADMIN)],
+        [KeyboardButton(text=ADMIN_BTN_EXIT)],
+    ], resize_keyboard=True)
+
+
+CHANNELS_BTN_ADD = "➕ Kanal qo'shish"
+CHANNELS_BTN_REMOVE = "➖ Kanalni o'chirish"
 
 
 def channels_menu_kb():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="➕ Kanal qo'shish", callback_data="ch_add")],
-        [InlineKeyboardButton(text="➖ Kanalni o'chirish", callback_data="ch_remove_menu")],
-        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
-    ])
+    return ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text=CHANNELS_BTN_ADD)],
+        [KeyboardButton(text=CHANNELS_BTN_REMOVE)],
+        [KeyboardButton(text=BACK_BTN)],
+    ], resize_keyboard=True)
 
 
 def channels_remove_kb(channels):
     rows = []
     for ch in channels:
         rows.append([InlineKeyboardButton(text=f"❌ {ch['title']}", callback_data=f"ch_remove:{ch['id']}")])
-    rows.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_channels")])
-    return InlineKeyboardMarkup(inline_keyboard=rows)
-
-
-def back_to_admin_kb():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⬅️ Admin panelga qaytish", callback_data="admin_back")]
-    ])
+    return InlineKeyboardMarkup(inline_keyboard=rows) if rows else None
