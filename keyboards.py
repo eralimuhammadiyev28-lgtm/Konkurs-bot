@@ -45,3 +45,9 @@ def channels_remove_kb(channels):
         rows.append([InlineKeyboardButton(text=f"❌ {ch['title']}", callback_data=f"ch_remove:{ch['id']}")])
     rows.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_channels")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def back_to_admin_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⬅️ Admin panelga qaytish", callback_data="admin_back")]
+    ])
