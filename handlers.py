@@ -271,7 +271,10 @@ async def top_handler(message: Message):
 
 @router.message(F.text == "📜 Shartlar")
 async def terms_handler(message: Message):
-    contest = await db.get_contest()
+    status, contest = await get_contest_status()
+    if status in ("not_configured", "ended"):
+        await message.answer("📜 Hozircha faol konkurs mavjud emas.")
+        return
     if not contest or not contest["terms"]:
         await message.answer("📜 Konkurs shartlari hali belgilanmagan.")
         return
@@ -283,7 +286,10 @@ async def terms_handler(message: Message):
 
 @router.message(F.text == "🎁 Sovg'alar")
 async def prizes_handler(message: Message):
-    contest = await db.get_contest()
+    status, contest = await get_contest_status()
+    if status in ("not_configured", "ended"):
+        await message.answer("🎁 Hozircha faol konkurs mavjud emas.")
+        return
     if not contest or not contest["prizes"]:
         await message.answer("🎁 Sovg'alar hali belgilanmagan.")
         return
