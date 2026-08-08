@@ -1,6 +1,7 @@
 import time
-from datetime import datetime, timezone, timedelta
 import html
+from datetime import datetime, timezone, timedelta
+
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
@@ -292,6 +293,33 @@ async def prizes_handler(message: Message):
 # Admin panel — PASTKI DOIMIY MENYU
 # ============================================================
 
+@router.message(Command("debug"))
+async def debug_handler(message: Message):
+    if not await is_admin(message.from_user.id):
+        return
+    contest = await db.get_contest()
+    now = int(time.time())
+    if not contest:
+        await message.answer("🔍 DEBUG: bazada hech qanday konkurs yozuvi yo'q.")
+        return
+    start_diff = contest["start_time"] - now if contest["start_time"] else None
+    end_diff = contest["end_time"] - now if contest["end_time"] else None
+    await message.answer(
+        f"🔍 <b>DEBUG</b>\n\n"
+        f"ID: {contest['id']}\n"
+        f"is_active: {contest['is_active']}\n"
+        f"start_time (epoch): {contest['start_time']}\n"
+        f"end_time (epoch): {contest['end_time']}\n"
+        f"HOZIRGI vaqt (epoch): {now}\n\n"
+        f"Boshlanishiga qoldi: {start_diff} soniya\n"
+        f"Tugashiga qoldi: {end_diff} soniya\n\n"
+        f"start_time (O'zbek vaqtida): {_fmt_dt(contest['start_time']) if contest['start_time'] else '-'}\n"
+        f"end_time (O'zbek vaqtida): {_fmt_dt(contest['end_time']) if contest['end_time'] else '-'}\n"
+        f"HOZIR (O'zbek vaqtida): {_fmt_dt(now)}",
+        parse_mode="HTML"
+    )
+
+
 @router.message(Command("admin"))
 async def admin_handler(message: Message):
     if not await is_admin(message.from_user.id):
@@ -401,21 +429,22 @@ async def process_prizes(message: Message, state: FSMContext):
 async def admin_winners(message: Message):
     if not await is_admin(message.from_user.id):
         return
-    top = await db.get_top_users(3)
+    top = await db.get_top_users(10)
     if not top:
         await message.answer("Hali ishtirokchilar yo'q.", reply_markup=admin_main_menu_kb())
         return
 
-    medals = ["🥇", "🥈", "🥉"]
-    text = "🏆 G'oliblar:\n\n"
-    for i, u in enumerate(top):
-        text += (
-            f"{medals[i]} {u['full_name']}\n"
-            f"   Username: @{u['username'] or 'yo\'q'}\n"
-            f"   ID: {u['telegram_id']}\n"
-            f"   Qo'shganlar: {u['invited_count']} ta\n\n"
+    lines = ["🏆 G'oliblar ro'yxati:\n"]
+    for i, u in enumerate(top, start=1):
+        full_name = html.escape(u["full_name"] or "Noma'lum")
+        tid = u["telegram_id"]
+        count = u["invited_count"]
+        # ID raqami ko'k rangda va bosiladigan (bosilganda profilga o'tadi)
+        lines.append(
+            f"{i}.{full_name}  {count} <a href=\"tg://user?id={tid}\">id:{tid}</a>"
         )
-    await message.answer(text, reply_markup=admin_main_menu_kb())
+
+    await message.answer("\n".join(lines), parse_mode="HTML", reply_markup=admin_main_menu_kb())
 
 
 @router.message(F.text == ADMIN_BTN_STATS)
