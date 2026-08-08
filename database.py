@@ -201,6 +201,20 @@ async def start_contest(start_time: int, end_time: int, terms: str, prizes: str)
         await db.commit()
 
 
+async def stop_active_contest():
+    """Hozirgi eng oxirgi konkursni DARHOL yakunlaydi: end_time'ni
+    HOZIRGI vaqtdan 1 soniya oldinga o'rnatadi. is_active=1 qoldiriladi
+    (shunda get_contest_status vaqt bo'yicha 'ended' deb hisoblaydi),
+    barcha ma'lumotlar (g'oliblar, statistika) bazada saqlanib qoladi."""
+    now = int(time.time())
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE contest SET end_time = ? WHERE id = (SELECT id FROM contest ORDER BY id DESC LIMIT 1)",
+            (now - 1,)
+        )
+        await db.commit()
+
+
 # ============================================================
 # Ko'p admin (bazada saqlanadi)
 # ============================================================
@@ -247,4 +261,3 @@ async def get_mandatory_channels():
         db.row_factory = aiosqlite.Row
         async with db.execute("SELECT * FROM mandatory_channels ORDER BY added_at ASC") as cursor:
             return await cursor.fetchall()
-            
