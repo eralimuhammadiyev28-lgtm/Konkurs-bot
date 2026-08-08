@@ -11,7 +11,8 @@ from aiogram.fsm.state import State, StatesGroup
 import database as db
 from keyboards import (
     join_channels_kb, main_menu_kb, admin_main_menu_kb, channels_menu_kb, channels_remove_kb,
-    ADMIN_BTN_START_CONTEST, ADMIN_BTN_WINNERS, ADMIN_BTN_STATS, ADMIN_BTN_BROADCAST,
+    stop_contest_confirm_kb,
+    ADMIN_BTN_START_CONTEST, ADMIN_BTN_STOP_CONTEST, ADMIN_BTN_WINNERS, ADMIN_BTN_STATS, ADMIN_BTN_BROADCAST,
     ADMIN_BTN_CHANNELS, ADMIN_BTN_ADD_ADMIN, ADMIN_BTN_EXIT,
     CHANNELS_BTN_ADD, CHANNELS_BTN_REMOVE, BACK_BTN,
 )
@@ -421,6 +422,48 @@ async def process_prizes(message: Message, state: FSMContext):
         f"Endi barcha foydalanuvchilar \"📜 Shartlar\" va \"🎁 Sovg'alar\" tugmalari orqali buni ko'ra oladi.",
         parse_mode="HTML", reply_markup=admin_main_menu_kb()
     )
+
+
+# --- Konkursni to'xtatish ---
+
+@router.message(F.text == ADMIN_BTN_STOP_CONTEST)
+async def admin_stop_contest_ask(message: Message):
+    if not await is_admin(message.from_user.id):
+        return
+    status, contest = await get_contest_status()
+    if status in ("not_configured", "ended"):
+        await message.answer(
+            "⏹ Hozircha faol yoki rejalashtirilgan konkurs yo'q — to'xtatadigan hech narsa yo'q.",
+            reply_markup=admin_main_menu_kb()
+        )
+        return
+    await message.answer(
+        "⚠️ Hozirgi konkursni DARHOL to'xtatmoqchimisiz?\n\n"
+        "Bu holatda konkurs zudlik bilan yakunlangan deb belgilanadi, "
+        "barcha foydalanuvchilar uchun \"🏁 Konkurs yakunlangan\" holatiga o'tadi. "
+        "Ma'lumotlar (ishtirokchilar, referallar) bazada saqlanib qoladi.",
+        reply_markup=stop_contest_confirm_kb()
+    )
+
+
+@router.callback_query(F.data == "stop_contest_confirm")
+async def admin_stop_contest_confirm(callback: CallbackQuery):
+    if not await is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    await db.stop_active_contest()
+    await callback.message.edit_text("✅ Konkurs to'xtatildi va yakunlangan deb belgilandi.")
+    await callback.message.answer("🛠 Admin panel", reply_markup=admin_main_menu_kb())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "stop_contest_cancel")
+async def admin_stop_contest_cancel(callback: CallbackQuery):
+    if not await is_admin(callback.from_user.id):
+        await callback.answer()
+        return
+    await callback.message.edit_text("❌ Bekor qilindi. Konkurs o'z holicha davom etmoqda.")
+    await callback.answer()
 
 
 # --- G'oliblar / statistika / broadcast ---
