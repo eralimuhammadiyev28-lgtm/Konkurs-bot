@@ -286,12 +286,14 @@ async def admin_handler(message: Message):
     if not await is_admin(message.from_user.id):
         return
     status, contest = await get_contest_status()
-    status_text = {
-        "not_configured": "⏹ Hali sozlanmagan",
-        "not_started": f"⏳ Rejalashtirilgan ({_fmt_dt(contest['start_time'])} da boshlanadi)",
-        "active": f"✅ Faol (tugash: {_fmt_dt(contest['end_time'])})",
-        "ended": "🏁 Yakunlangan",
-    }[status]
+    if status == "not_configured":
+        status_text = "⏹ Hali sozlanmagan"
+    elif status == "not_started":
+        status_text = f"⏳ Rejalashtirilgan ({_fmt_dt(contest['start_time'])} da boshlanadi)"
+    elif status == "active":
+        status_text = f"✅ Faol (tugash: {_fmt_dt(contest['end_time'])})"
+    else:
+        status_text = "🏁 Yakunlangan"
     await message.answer(
         f"👨‍💼 Admin panel\n\nKonkurs holati: {status_text}",
         reply_markup=admin_main_menu_kb()
