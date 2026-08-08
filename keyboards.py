@@ -22,6 +22,7 @@ def main_menu_kb():
 
 
 ADMIN_BTN_START_CONTEST = "▶️ Konkursni boshlash"
+ADMIN_BTN_STOP_CONTEST = "⏹ Konkursni to'xtatish"
 ADMIN_BTN_WINNERS = "🏆 G'oliblarni ko'rish"
 ADMIN_BTN_STATS = "📊 Umumiy statistika"
 ADMIN_BTN_BROADCAST = "📣 Hammaga xabar"
@@ -33,11 +34,21 @@ ADMIN_BTN_EXIT = "🚪 Admin paneldan chiqish"
 def admin_main_menu_kb():
     return ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text=ADMIN_BTN_START_CONTEST)],
+        [KeyboardButton(text=ADMIN_BTN_STOP_CONTEST)],
         [KeyboardButton(text=ADMIN_BTN_WINNERS), KeyboardButton(text=ADMIN_BTN_STATS)],
         [KeyboardButton(text=ADMIN_BTN_BROADCAST), KeyboardButton(text=ADMIN_BTN_CHANNELS)],
         [KeyboardButton(text=ADMIN_BTN_ADD_ADMIN)],
         [KeyboardButton(text=ADMIN_BTN_EXIT)],
     ], resize_keyboard=True)
+
+
+def stop_contest_confirm_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Ha, to'xtatish", callback_data="stop_contest_confirm"),
+            InlineKeyboardButton(text="❌ Yo'q, bekor qilish", callback_data="stop_contest_cancel"),
+        ]
+    ])
 
 
 CHANNELS_BTN_ADD = "➕ Kanal qo'shish"
