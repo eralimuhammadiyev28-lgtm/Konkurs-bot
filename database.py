@@ -1,9 +1,14 @@
+import os
 import aiosqlite
 import uuid
 import time
 from datetime import datetime
 
-DB_PATH = "contest.db"
+# Railway Volume mount qilinganda DB_DIR shu yerga ko'rsatadi (masalan /app/data).
+# Agar DB_DIR o'rnatilmagan bo'lsa (masalan lokal test paytida), joriy papka ishlatiladi.
+DB_DIR = os.getenv("DB_DIR", ".")
+os.makedirs(DB_DIR, exist_ok=True)
+DB_PATH = os.path.join(DB_DIR, "contest.db")
 
 
 async def init_db():
@@ -242,3 +247,4 @@ async def get_mandatory_channels():
         db.row_factory = aiosqlite.Row
         async with db.execute("SELECT * FROM mandatory_channels ORDER BY added_at ASC") as cursor:
             return await cursor.fetchall()
+            
