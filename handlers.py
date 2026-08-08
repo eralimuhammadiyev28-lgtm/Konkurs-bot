@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery
@@ -69,8 +69,19 @@ async def is_contest_active() -> bool:
     return status == "active"
 
 
+TASHKENT_TZ = timezone(timedelta(hours=5))
+
+
+def _parse_dt_tashkent(text: str) -> datetime:
+    """Admin O'zbekiston (Toshkent, UTC+5) vaqtida kiritadi deb ANIQ belgilaymiz —
+    serverning (Railway, odatda UTC) o'z vaqt zonasiga ishonib qolmaymiz."""
+    naive = datetime.strptime(text.strip(), "%d.%m.%Y %H:%M")
+    return naive.replace(tzinfo=TASHKENT_TZ)
+
+
 def _fmt_dt(ts: int) -> str:
-    return datetime.fromtimestamp(ts).strftime("%d.%m.%Y %H:%M")
+    """Epoch vaqtni har doim O'zbekiston vaqtida ko'rsatish (kim qayerdan kirmasin)."""
+    return datetime.fromtimestamp(ts, tz=TASHKENT_TZ).strftime("%d.%m.%Y %H:%M")
 
 
 # ============================================================
@@ -327,7 +338,7 @@ async def process_start_time(message: Message, state: FSMContext):
     if not await is_admin(message.from_user.id):
         return
     try:
-        dt = datetime.strptime(message.text.strip(), "%d.%m.%Y %H:%M")
+        dt = _parse_dt_tashkent(message.text)
     except ValueError:
         await message.answer("❌ Format noto'g'ri. Masalan: <code>15.08.2026 09:00</code>", parse_mode="HTML")
         return
@@ -343,7 +354,7 @@ async def process_end_time(message: Message, state: FSMContext):
     if not await is_admin(message.from_user.id):
         return
     try:
-        dt = datetime.strptime(message.text.strip(), "%d.%m.%Y %H:%M")
+        dt = _parse_dt_tashkent(message.text)
     except ValueError:
         await message.answer("❌ Format noto'g'ri. Masalan: <code>20.08.2026 20:00</code>", parse_mode="HTML")
         return
