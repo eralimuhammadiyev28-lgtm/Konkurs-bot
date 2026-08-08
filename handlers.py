@@ -8,7 +8,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 import database as db
-from keyboards import join_channels_kb, main_menu_kb, admin_panel_kb, channels_menu_kb, channels_remove_kb
+from keyboards import (
+    join_channels_kb, main_menu_kb, admin_panel_kb, channels_menu_kb,
+    channels_remove_kb, back_to_admin_kb,
+)
 from config import ADMIN_IDS, BOT_USERNAME
 
 router = Router()
@@ -369,7 +372,8 @@ async def process_prizes(message: Message, state: FSMContext):
         f"📜 Shartlar:\n{data['terms']}\n\n"
         f"🎁 Sovg'alar:\n{message.text}\n\n"
         f"Endi barcha foydalanuvchilar \"📜 Shartlar\" va \"🎁 Sovg'alar\" tugmalari orqali buni ko'ra oladi.",
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=back_to_admin_kb()
     )
 
 
@@ -381,7 +385,7 @@ async def admin_winners(callback: CallbackQuery):
         return
     top = await db.get_top_users(3)
     if not top:
-        await callback.message.answer("Hali ishtirokchilar yo'q.")
+        await callback.message.answer("Hali ishtirokchilar yo'q.", reply_markup=back_to_admin_kb())
         await callback.answer()
         return
 
@@ -394,7 +398,7 @@ async def admin_winners(callback: CallbackQuery):
             f"   ID: {u['telegram_id']}\n"
             f"   Qo'shganlar: {u['invited_count']} ta\n\n"
         )
-    await callback.message.answer(text)
+    await callback.message.answer(text, reply_markup=back_to_admin_kb())
     await callback.answer()
 
 
@@ -407,7 +411,8 @@ async def admin_stats(callback: CallbackQuery):
         f"📊 Umumiy statistika:\n\n"
         f"👥 Jami foydalanuvchilar: {total_users}\n"
         f"✅ Kanal(lar)ga qo'shilganlar: {joined}\n"
-        f"🔗 Jami referal harakatlar: {total_refs}"
+        f"🔗 Jami referal harakatlar: {total_refs}",
+        reply_markup=back_to_admin_kb()
     )
     await callback.answer()
 
@@ -434,7 +439,10 @@ async def process_broadcast(message: Message, state: FSMContext, bot: Bot):
             sent += 1
         except Exception:
             failed += 1
-    await message.answer(f"📣 Xabar yuborildi!\n✅ Yuborildi: {sent}\n❌ Yuborilmadi: {failed}")
+    await message.answer(
+        f"📣 Xabar yuborildi!\n✅ Yuborildi: {sent}\n❌ Yuborilmadi: {failed}",
+        reply_markup=back_to_admin_kb()
+    )
 
 
 # --- Majburiy kanallar ---
@@ -488,7 +496,10 @@ async def channel_add_finish(message: Message, state: FSMContext, bot: Bot):
         invite_link = f"https://t.me/{chat.username}" if chat.username else None
 
     await db.add_mandatory_channel(chat.id, chat.username, chat.title, invite_link)
-    await message.answer(f"✅ \"{chat.title}\" majburiy kanallar ro'yxatiga qo'shildi.", reply_markup=None)
+    await message.answer(
+        f"✅ \"{chat.title}\" majburiy kanallar ro'yxatiga qo'shildi.",
+        reply_markup=back_to_admin_kb()
+    )
 
 
 @router.callback_query(F.data == "ch_remove_menu")
@@ -538,4 +549,8 @@ async def add_admin_finish(message: Message, state: FSMContext):
         await message.answer("❌ Noto'g'ri format. Faqat raqam yuboring.")
         return
     await db.add_admin(new_admin_id)
-    await message.answer(f"✅ <code>{new_admin_id}</code> endi admin etib tayinlandi.", parse_mode="HTML")
+    await message.answer(
+        f"✅ <code>{new_admin_id}</code> endi admin etib tayinlandi.",
+        parse_mode="HTML",
+        reply_markup=back_to_admin_kb()
+    )
